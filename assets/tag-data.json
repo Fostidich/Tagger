@@ -1,0 +1,15 @@
+[
+    {
+        "/home/kello/Repos/Tagger": {
+            "src": "red",
+            ".gitignore": "blue",
+            "Cargo.toml": "yellow"
+        }
+    },
+    {
+        "/home/kello/Studies": {
+            "FOR": "red",
+            "schedule": "green"
+        }
+    }
+]
