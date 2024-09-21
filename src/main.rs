@@ -1,58 +1,32 @@
-use std::{collections::HashMap, env, process::exit};
+mod catcher;
+mod color;
+mod json_data;
+
+use catcher::{Catch, Error::*};
+use color::Color;
+use json_data::retrieve_json_data;
+use std::{env::args, fs::canonicalize, path::Path};
+use strum::IntoEnumIterator;
 
 const DATA_FOLDER: &str = "~/.config/tag/tag-data.json";
 
-enum Color {
-    Reset,
-    Red,
-    Green,
-    Yellow,
-    Blue,
-    Magenta,
-    Cyan,
-}
-
-impl Color {
-    fn name(&self) -> &str {
-        match self {
-            Color::Reset => "reset",
-            Color::Red => "red",
-            Color::Green => "green",
-            Color::Yellow => "yellow",
-            Color::Blue => "blue",
-            Color::Magenta => "magenta",
-            Color::Cyan => "cyan",
-        }
-    }
-
-    fn value(&self) -> &str {
-        match self {
-            Color::Reset => "\\e[0m",
-            Color::Red => "\\e[31m",
-            Color::Green => "\\e[32m",
-            Color::Yellow => "\\e[33m",
-            Color::Blue => "\\e[34m",
-            Color::Magenta => "\\e[35m",
-            Color::Cyan => "\\e[36m",
-        }
-    }
-}
-
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = args().collect();
     let len = args.len();
 
+    // TODO: check config file presence
+
     if len < 2 {
-        eprintln!("No argument provided");
-        exit(1);
+        NoArgument.abort();
     }
 
     if len == 2 {
         if args[1] == "list" {
             print_list(".");
+        } else if args[1] == "clean" {
+            unimplemented!();
         } else {
-            eprintln!("Unknown argument");
-            exit(1);
+            UnknownArgument.abort();
         }
         return;
     }
@@ -60,6 +34,8 @@ fn main() {
     if len == 3 {
         if args[1] == "list" {
             print_list(&args[2]);
+        } else if args[1] == "order" {
+            unimplemented!();
         } else {
             tag_file(&args[1], &args[2]);
         }
@@ -67,48 +43,85 @@ fn main() {
     }
 
     if len > 3 {
-        eprintln!("Too many arguments");
-        exit(1);
+        TooManyArguments.abort();
     }
 }
 
 fn tag_file(filename: &str, color: &str) {
-    todo!()
+    // Check if color exists
+    let new_color = Color::iter()
+        .find(|c| color.eq(c.name()))
+        .catch(UnknownValue);
+
+    // Check that filename exists
+    let path = Path::new(filename);
+    if !path.exists() {
+        FileNotFound.abort();
+    }
+
+    // Get the absolute path
+    let abs_path = canonicalize(path).catch(NonCanonicalizablePath);
+
+    // Get the basename
+    let basename = abs_path
+        .file_name()
+        .catch(BaseNameNotFound)
+        .to_str()
+        .catch(StringConversionFailure);
+
+    // Get the parent dir
+    let parent_dir = abs_path
+        .parent()
+        .catch(ParentDirNotFound)
+        .to_str()
+        .catch(StringConversionFailure);
+
+    // Get folder tags
+
+    // Add/edit/remove color of the entry
 }
 
 fn print_list(dir: &str) {
     // Get filenames of the provided dir
     let dir_filenames = retrieve_dir_filenames(dir);
 
-    // Get tags of the provided dir
+    // Get folders tags
     let json_data = retrieve_json_data();
-    let dir_tags: &HashMap<String, Color>;
-    let empty_map: HashMap<String, Color> = HashMap::new();
 
-    match json_data.get(dir) {
-        Some(tags) => dir_tags = tags,
-        None => dir_tags = &empty_map,
-    }
+    // Get the absolute path
+    let abs_path = get_abs_path(dir);
 
-    // Check if filename has a tag
-    for item in dir_filenames {
-        match dir_tags.get(&item) {
-            Some(color) => println!("{}{}{}", color.value(), item, Color::Reset.value()),
-            None => println!("{}", item),
+    // Check if there is json tag data for the provided folder
+    match json_data.get(&abs_path) {
+        Some(map) => {
+            for item in dir_filenames {
+                // Check if filename has a tag and print
+                match map.get(&item) {
+                    Some(color) => println!("{}{}{}", color.value(), item, Color::Reset.value()),
+                    None => println!("{}", item),
+                }
+            }
+        }
+        None => {
+            for item in dir_filenames {
+                println!("{}", item)
+            }
         }
     }
 
-    unimplemented!("use alphabetical order");
-}
-
-fn retrieve_json_data() -> HashMap<String, HashMap<String, Color>> {
-    todo!();
-}
-
-fn dump_json_data(data: HashMap<String, HashMap<String, Color>>) {
-    todo!();
+    // TODO: show other file metadata
+    // TODO: use alphabetical order
 }
 
 fn retrieve_dir_filenames(dir: &str) -> Vec<String> {
     todo!();
+}
+
+fn get_abs_path(dir: &str) -> String {
+    // Make the path absolute
+    canonicalize(dir)
+        .catch(NonCanonicalizablePath)
+        .to_str()
+        .catch(StringConversionFailure)
+        .to_string()
 }
