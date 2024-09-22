@@ -4,8 +4,8 @@ mod json_data;
 
 use catcher::{Catch, Error::*};
 use color::Color;
-use json_data::retrieve_json_data;
-use std::{env::args, fs::canonicalize, path::Path};
+use json_data::{dump_json_data, retrieve_json_data};
+use std::{collections::HashMap, env::args, fs::canonicalize, path::Path};
 use strum::IntoEnumIterator;
 
 const DATA_FOLDER: &str = "~/.config/tag/tag-data.json";
@@ -77,8 +77,17 @@ fn tag_file(filename: &str, color: &str) {
         .catch(StringConversionFailure);
 
     // Get folder tags
+    let mut json_data = retrieve_json_data();
 
     // Add/edit/remove color of the entry
+    json_data
+        .entry(parent_dir.to_string())
+        .or_insert_with(HashMap::new)
+        .insert(basename.to_string(), new_color)
+        .catch(ValueNotFound);
+
+    // Dump back json data
+    dump_json_data(json_data);
 }
 
 fn print_list(dir: &str) {
@@ -93,10 +102,10 @@ fn print_list(dir: &str) {
 
     // Check if there is json tag data for the provided folder
     match json_data.get(&abs_path) {
-        Some(map) => {
+        Some(dir_tags) => {
             for item in dir_filenames {
                 // Check if filename has a tag and print
-                match map.get(&item) {
+                match dir_tags.get(&item) {
                     Some(color) => println!("{}{}{}", color.value(), item, Color::Reset.value()),
                     None => println!("{}", item),
                 }
