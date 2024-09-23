@@ -1,26 +1,31 @@
 mod catcher;
 mod color;
+mod fs_ops;
 mod json_data;
 
 use catcher::{Catch, Error::*};
 use color::Color;
-use json_data::{dump_json_data, retrieve_json_data};
+use fs_ops::{get_abs_path, retrieve_dir_filenames};
+use json_data::{dump_tag_data, retrieve_tag_data};
 use std::{collections::HashMap, env::args, fs::canonicalize, path::Path};
 use strum::IntoEnumIterator;
+
+type Tags = HashMap<String, HashMap<String, Color>>;
 
 const DATA_FOLDER: &str = "~/.config/tag/tag-data.json";
 
 fn main() {
     let args: Vec<String> = args().collect();
-    let len = args.len();
+    let argc = args.len();
 
     // TODO: check config file presence
+    // TODO: make a clean
 
-    if len < 2 {
+    if argc < 2 {
         NoArgument.abort();
     }
 
-    if len == 2 {
+    if argc == 2 {
         if args[1] == "list" {
             print_list(".");
         } else if args[1] == "clean" {
@@ -31,7 +36,7 @@ fn main() {
         return;
     }
 
-    if len == 3 {
+    if argc == 3 {
         if args[1] == "list" {
             print_list(&args[2]);
         } else if args[1] == "order" {
@@ -42,7 +47,7 @@ fn main() {
         return;
     }
 
-    if len > 3 {
+    if argc > 3 {
         TooManyArguments.abort();
     }
 }
@@ -77,9 +82,9 @@ fn tag_file(filename: &str, color: &str) {
         .catch(StringConversionFailure);
 
     // Get folder tags
-    let mut json_data = retrieve_json_data();
+    let mut json_data = retrieve_tag_data();
 
-    // Add/edit/remove color of the entry
+    // Add color to the entry
     json_data
         .entry(parent_dir.to_string())
         .or_insert_with(HashMap::new)
@@ -87,7 +92,7 @@ fn tag_file(filename: &str, color: &str) {
         .catch(ValueNotFound);
 
     // Dump back json data
-    dump_json_data(json_data);
+    dump_tag_data(json_data);
 }
 
 fn print_list(dir: &str) {
@@ -95,7 +100,7 @@ fn print_list(dir: &str) {
     let dir_filenames = retrieve_dir_filenames(dir);
 
     // Get folders tags
-    let json_data = retrieve_json_data();
+    let json_data = retrieve_tag_data();
 
     // Get the absolute path
     let abs_path = get_abs_path(dir);
@@ -120,17 +125,4 @@ fn print_list(dir: &str) {
 
     // TODO: show other file metadata
     // TODO: use alphabetical order
-}
-
-fn retrieve_dir_filenames(dir: &str) -> Vec<String> {
-    todo!();
-}
-
-fn get_abs_path(dir: &str) -> String {
-    // Make the path absolute
-    canonicalize(dir)
-        .catch(NonCanonicalizablePath)
-        .to_str()
-        .catch(StringConversionFailure)
-        .to_string()
 }

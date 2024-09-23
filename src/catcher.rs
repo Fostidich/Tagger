@@ -7,10 +7,12 @@ pub enum Error {
     UnknownValue,
     FileNotFound,
     ValueNotFound,
+    IOError,
     NonCanonicalizablePath,
     BaseNameNotFound,
     ParentDirNotFound,
     StringConversionFailure,
+    SerdeJsonConversionFailure,
 }
 
 impl Error {
@@ -22,10 +24,12 @@ impl Error {
             UnknownValue => "Unknown value",
             FileNotFound => "File not found",
             ValueNotFound => "Value not found",
+            IOError => "Unable to access filesystem",
             NonCanonicalizablePath => "Unable to retrieve absolute path",
             BaseNameNotFound => "Unable to retrieve base name",
             ParentDirNotFound => "Unable to retrieve parent dir",
             StringConversionFailure => "Error while converting to string",
+            SerdeJsonConversionFailure => "Unable to retrieve json file content",
         }
     }
 
