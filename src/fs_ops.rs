@@ -36,7 +36,7 @@ pub fn get_abs_path(dir: &str) -> String {
         .to_string()
 }
 
-pub fn open_file(path: &str, write: bool) -> File {
+pub fn open_file(path: &str) -> File {
     // Expand the tilde to the home directory
     let mut path = PathBuf::from(path);
     if path.starts_with("~") {
@@ -51,7 +51,7 @@ pub fn open_file(path: &str, write: bool) -> File {
     // Open/create the file
     File::options()
         .read(true)
-        .write(write)
+        .write(true)
         .create(true)
         .open(&path)
         .catch(IOError)

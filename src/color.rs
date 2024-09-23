@@ -28,13 +28,13 @@ impl Color {
 
     pub fn value(&self) -> &str {
         match self {
-            Reset => "\\e[0m",
-            Red => "\\e[31m",
-            Green => "\\e[32m",
-            Yellow => "\\e[33m",
-            Blue => "\\e[34m",
-            Magenta => "\\e[35m",
-            Cyan => "\\e[36m",
+            Reset => "\x1b[0m",
+            Red => "\x1b[31m",
+            Green => "\x1b[32m",
+            Yellow => "\x1b[33m",
+            Blue => "\x1b[34m",
+            Magenta => "\x1b[35m",
+            Cyan => "\x1b[36m",
         }
     }
 }

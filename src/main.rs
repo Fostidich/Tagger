@@ -88,8 +88,7 @@ fn tag_file(filename: &str, color: &str) {
     json_data
         .entry(parent_dir.to_string())
         .or_insert_with(HashMap::new)
-        .insert(basename.to_string(), new_color)
-        .catch(ValueNotFound);
+        .insert(basename.to_string(), new_color);
 
     // Dump back json data
     dump_tag_data(json_data);
@@ -125,4 +124,5 @@ fn print_list(dir: &str) {
 
     // TODO: show other file metadata
     // TODO: use alphabetical order
+    // TODO: manage dot files
 }
