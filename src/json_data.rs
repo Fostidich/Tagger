@@ -11,6 +11,11 @@ pub fn retrieve_tag_data() -> Tags {
         .read_to_string(&mut buff)
         .catch(StringConversionFailure);
 
+    // If file didn't exist or is empty fill it with something
+    if buff.is_empty() {
+        buff = "{}".to_string();
+    }
+
     // Deserialize from string
     serde_json::from_str::<Tags>(&buff).catch(SerdeJsonConversionFailure)
 }

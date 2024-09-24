@@ -2,12 +2,24 @@
 
 Use `tag {filename} {color}` to tag a file with a specific color.
 
-Use `tag list` to list files in the directory.
+Use `tag [ls|la] (folder)` to list (hidden) files in the (specific) directory.
 
-Use `tag list {folder}` to list files in a specific folder.
+# Example
 
-[Future feature] Use `tag order [alpha|type|size|edit|tag]` to choose ordering parameter.
+```
+    tag assets red
+```
 
-[Future feature] Use `tag clean` to clean data file from unexisting entries (and automatic run).
+```
+    tag src/main.rs magenta
+```
+
+```
+    tag ls
+```
+
+```
+    tag la ~/Documents
+```
 
 ###### Rust code written by Francesco Ostidich

@@ -1,58 +1,75 @@
 use crate::catcher::{Catch, Error::*};
 
-use home::home_dir;
 use std::{
+    fmt::{Display, Formatter, Result},
     fs::{canonicalize, create_dir_all, read_dir, File},
-    path::{Path, PathBuf},
+    os::unix::fs::MetadataExt,
+    path::PathBuf,
 };
 
-pub fn retrieve_dir_filenames(dir: &str) -> Vec<String> {
-    let path = Path::new(dir);
-    let mut filenames = Vec::new();
+pub struct FileData {
+    pub filename: String,
+    pub directory: bool,
+    pub size: u64,
+}
+
+impl Display for FileData {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(
+            f,
+            "{:>-5.0} - {}",
+            byte_unit::Byte::from_u64(self.size).get_appropriate_unit(byte_unit::UnitType::Decimal),
+            self.filename
+        )?;
+        if self.directory {
+            write!(f, "/")
+        } else {
+            Ok(())
+        }
+    }
+}
+
+pub fn retrieve_dir_files(dir: &str) -> Vec<FileData> {
+    let mut files = Vec::new();
 
     // Get string filename from each entry in the dir
-    read_dir(path).catch(IOError).for_each(|entry| {
-        filenames.push(
-            entry
-                .catch(IOError)
-                .path()
-                .file_name()
-                .catch(BaseNameNotFound)
-                .to_str()
-                .catch(StringConversionFailure)
-                .to_string(),
-        )
+    read_dir(dir).catch(IOError).for_each(|e| {
+        let entry = e.catch(IOError);
+        files.push(FileData {
+            filename: entry.file_name().to_string_lossy().to_string(),
+            directory: entry.file_type().catch(IOError).is_dir(),
+            size: entry.metadata().catch(IOError).size(),
+        })
     });
 
-    filenames
+    files
 }
 
 pub fn get_abs_path(dir: &str) -> String {
     // Make the path absolute
     canonicalize(dir)
         .catch(NonCanonicalizablePath)
-        .to_str()
-        .catch(StringConversionFailure)
+        .to_string_lossy()
         .to_string()
 }
 
 pub fn open_file(path: &str) -> File {
     // Expand the tilde to the home directory
-    let mut path = PathBuf::from(path);
-    if path.starts_with("~") {
-        path = home_dir()
+    let mut path_buf = PathBuf::from(path);
+    if path_buf.starts_with("~") {
+        path_buf = home::home_dir()
             .catch(IOError)
-            .join(path.strip_prefix("~").unwrap());
+            .join(path_buf.strip_prefix("~").unwrap());
     }
 
     // Create the parent directories if they don't exist
-    create_dir_all(path.parent().catch(ParentDirNotFound)).catch(IOError);
+    create_dir_all(path_buf.parent().catch(ParentDirNotFound)).catch(IOError);
 
     // Open/create the file
     File::options()
         .read(true)
         .write(true)
         .create(true)
-        .open(&path)
+        .open(&path_buf)
         .catch(IOError)
 }

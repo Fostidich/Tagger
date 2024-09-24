@@ -5,9 +5,15 @@ mod json_data;
 
 use catcher::{Catch, Error::*};
 use color::Color;
-use fs_ops::{get_abs_path, retrieve_dir_filenames};
+use fs_ops::{get_abs_path, retrieve_dir_files};
 use json_data::{dump_tag_data, retrieve_tag_data};
-use std::{collections::HashMap, env::args, fs::canonicalize, path::Path};
+use std::{
+    cmp::Ordering::{Greater, Less},
+    collections::HashMap,
+    env::args,
+    fs::canonicalize,
+    path::Path,
+};
 use strum::IntoEnumIterator;
 
 type Tags = HashMap<String, HashMap<String, Color>>;
@@ -18,7 +24,6 @@ fn main() {
     let args: Vec<String> = args().collect();
     let argc = args.len();
 
-    // TODO: check config file presence
     // TODO: make a clean
 
     if argc < 2 {
@@ -26,10 +31,10 @@ fn main() {
     }
 
     if argc == 2 {
-        if args[1] == "list" {
-            print_list(".");
-        } else if args[1] == "clean" {
-            unimplemented!();
+        if args[1] == "ls" {
+            print_list(".", false);
+        } else if args[1] == "la" {
+            print_list(".", true);
         } else {
             UnknownArgument.abort();
         }
@@ -37,10 +42,10 @@ fn main() {
     }
 
     if argc == 3 {
-        if args[1] == "list" {
-            print_list(&args[2]);
-        } else if args[1] == "order" {
-            unimplemented!();
+        if args[1] == "ls" {
+            print_list(&args[2], false);
+        } else if args[1] == "la" {
+            print_list(&args[2], true);
         } else {
             tag_file(&args[1], &args[2]);
         }
@@ -94,9 +99,21 @@ fn tag_file(filename: &str, color: &str) {
     dump_tag_data(json_data);
 }
 
-fn print_list(dir: &str) {
+fn print_list(dir: &str, hidden_files: bool) {
     // Get filenames of the provided dir
-    let dir_filenames = retrieve_dir_filenames(dir);
+    let mut dir_files = retrieve_dir_files(dir);
+
+    // Remove hidden files if not requested
+    if !hidden_files {
+        dir_files.retain(|item| !item.filename.starts_with("."));
+    }
+
+    // Reorder files list
+    dir_files.sort_by(|a, b| match (a.directory, b.directory) {
+        (true, false) => Less,
+        (false, true) => Greater,
+        _ => a.filename.to_lowercase().cmp(&b.filename.to_lowercase()),
+    });
 
     // Get folders tags
     let json_data = retrieve_tag_data();
@@ -107,22 +124,18 @@ fn print_list(dir: &str) {
     // Check if there is json tag data for the provided folder
     match json_data.get(&abs_path) {
         Some(dir_tags) => {
-            for item in dir_filenames {
+            for item in dir_files {
                 // Check if filename has a tag and print
-                match dir_tags.get(&item) {
+                match dir_tags.get(&item.filename) {
                     Some(color) => println!("{}{}{}", color.value(), item, Color::Reset.value()),
                     None => println!("{}", item),
                 }
             }
         }
         None => {
-            for item in dir_filenames {
+            for item in dir_files {
                 println!("{}", item)
             }
         }
     }
-
-    // TODO: show other file metadata
-    // TODO: use alphabetical order
-    // TODO: manage dot files
 }
