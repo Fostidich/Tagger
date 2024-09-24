@@ -15,16 +15,16 @@ pub struct FileData {
 
 impl Display for FileData {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(
-            f,
-            "{:>-5.0} - {}",
-            byte_unit::Byte::from_u64(self.size).get_appropriate_unit(byte_unit::UnitType::Decimal),
-            self.filename
-        )?;
         if self.directory {
-            write!(f, "/")
+            write!(f, "      - {}/", self.filename)
         } else {
-            Ok(())
+            write!(
+                f,
+                "{:>-5.0} - {}",
+                byte_unit::Byte::from_u64(self.size)
+                    .get_appropriate_unit(byte_unit::UnitType::Decimal),
+                self.filename
+            )
         }
     }
 }
