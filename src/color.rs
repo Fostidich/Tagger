@@ -1,6 +1,6 @@
 use Color::*;
 
-#[derive(strum_macros::EnumIter, serde::Serialize, serde::Deserialize)]
+#[derive(PartialEq, strum_macros::EnumIter, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Color {
     Reset,

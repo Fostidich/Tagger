@@ -6,7 +6,7 @@ mod json_data;
 use catcher::{Catch, Error::*};
 use color::Color;
 use fs_ops::{get_abs_path, retrieve_dir_files};
-use json_data::{dump_tag_data, retrieve_tag_data};
+use json_data::{clean_tag_data, dump_tag_data, retrieve_tag_data};
 use std::{
     cmp::Ordering::{Greater, Less},
     collections::HashMap,
@@ -24,7 +24,7 @@ fn main() {
     let args: Vec<String> = args().collect();
     let argc = args.len();
 
-    // TODO: make a clean
+    clean_tag_data();
 
     if argc < 2 {
         NoArgument.abort();
