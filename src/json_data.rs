@@ -36,8 +36,8 @@ pub fn clean_tag_data() {
     // Retrieve folder tags
     let mut json_data = retrieve_tag_data();
 
-    // Remove parent dirs that don't exist anymore
-    json_data.retain(|k, _| Path::new(k).exists());
+    // Remove parent dirs that don't exist anymore or that are empty
+    json_data.retain(|k, v| !v.is_empty() && Path::new(k).exists());
 
     // Remove basenames that don't exist anymore or that are reset colored
     for folder in json_data.iter_mut() {
