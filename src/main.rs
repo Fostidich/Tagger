@@ -128,13 +128,23 @@ fn print_list(dir: &str, hidden_files: bool) {
                 // Check if filename has a tag and print
                 match dir_tags.get(&item.filename) {
                     Some(color) => println!("{}{}{}", color.value(), item, Color::Reset.value()),
-                    None => println!("{}", item),
+                    None => {
+                        if item.directory {
+                            println!("{}{}{}", Color::Cyan.value(), item, Color::Reset.value())
+                        } else {
+                            println!("{}", item)
+                        }
+                    }
                 }
             }
         }
         None => {
             for item in dir_files {
-                println!("{}", item)
+                if item.directory {
+                    println!("{}{}{}", Color::Cyan.value(), item, Color::Reset.value())
+                } else {
+                    println!("{}", item)
+                }
             }
         }
     }
