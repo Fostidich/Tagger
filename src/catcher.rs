@@ -32,7 +32,12 @@ impl Error {
     }
 
     pub fn abort(&self) -> ! {
-        panic!("{}", self.message());
+        if cfg!(debug_assertions) {
+            panic!("{}", self.message())
+        } else {
+            eprintln!("{}", self.message());
+            std::process::exit(1)
+        }
     }
 }
 
