@@ -36,8 +36,15 @@ pub fn retrieve_dir_files(dir: &str) -> Vec<FileData> {
     read_dir(dir).catch(IOError).for_each(|e| {
         let entry = e.catch(IOError);
         files.push(FileData {
+            // Get file name
             filename: entry.file_name().to_string_lossy().to_string(),
-            directory: entry.file_type().catch(IOError).is_dir(),
+
+            // True if file is dir or symlink to a dir
+            directory: entry.file_type().catch(IOError).is_dir()
+                || (entry.metadata().catch(IOError).is_symlink()
+                    && entry.path().read_link().catch(IOError).is_dir()),
+
+            // Get file size
             size: entry.metadata().catch(IOError).size(),
         })
     });
