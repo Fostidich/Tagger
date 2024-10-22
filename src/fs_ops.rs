@@ -66,7 +66,7 @@ pub fn open_file(path: &str) -> File {
     if path_buf.starts_with("~") {
         path_buf = home::home_dir()
             .catch(IOError)
-            .join(path_buf.strip_prefix("~").unwrap());
+            .join(path_buf.strip_prefix("~").catch(UnknownValue));
     }
 
     // Create the parent directories if they don't exist
