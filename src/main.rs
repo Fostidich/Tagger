@@ -18,7 +18,7 @@ use strum::IntoEnumIterator;
 
 type Tags = HashMap<String, HashMap<String, Color>>;
 
-const DATA_FOLDER: &str = "~/.config/tag/tag-data.json";
+const DATA_FOLDER: &str = "~/.local/tag/tag-data.json";
 
 fn main() {
     let args: Vec<String> = args().collect();
